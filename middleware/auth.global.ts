@@ -1,7 +1,6 @@
-import { getActivePinia } from "pinia";
 import { useAuthStore } from "~/stores/authStore";
 
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const toPathSegments = to.path.split("/").filter(Boolean);
 
   if (toPathSegments.at(0) === "platform") {
@@ -14,7 +13,10 @@ export default defineNuxtRouteMiddleware((to) => {
     console.log(token.value);
 
     if (token.value) {
-      authStore.login();
+      await authStore.login();
+
+      if (!authStore.user) await authStore.fetchUser();
+
       return;
     }
 

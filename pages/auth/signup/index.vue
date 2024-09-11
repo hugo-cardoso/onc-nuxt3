@@ -2,6 +2,7 @@
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { z } from "zod";
+import { useToast } from "~/components/ui/toast";
 
 const formSchema = toTypedSchema(
   z.object({
@@ -18,24 +19,41 @@ const form = useForm({
   validationSchema: formSchema,
 });
 
+const { toast } = useToast();
+
 const isLoading = ref(false);
 
 const onSubmit = form.handleSubmit(async (values) => {
   console.log(values);
 
   isLoading.value = true;
-  const response = await $fetch<{ confirmUrl: string }>("/api/auth/signup", {
-    method: "POST",
-    body: JSON.stringify({
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      password: values.password,
-    }),
-  });
-  isLoading.value = false;
 
-  router.push(response.confirmUrl);
+  try {
+    const response = await $fetch<{ confirmUrl: string }>("/api/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        password: values.password,
+      }),
+    });
+
+    toast({
+      title: "Confirmation",
+      description: "Please check your email to confirm your account.",
+    });
+
+    router.push(response.confirmUrl);
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Something went wrong. Please try again.",
+      variant: "destructive",
+    });
+  }
+
+  isLoading.value = false;
 });
 </script>
 

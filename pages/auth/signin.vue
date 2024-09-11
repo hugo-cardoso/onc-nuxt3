@@ -19,6 +19,7 @@ const form = useForm({
 const router = useRouter();
 const authStore = useAuthStore();
 const token = useCookie("token");
+const refresh_token = useCookie("refresh_token");
 
 const isLoading = ref(false);
 
@@ -28,7 +29,10 @@ const onSubmit = form.handleSubmit(async (values) => {
   isLoading.value = true;
 
   try {
-    const response = await $fetch<{ accessToken: string }>("/api/auth/signin", {
+    const response = await $fetch<{
+      accessToken: string;
+      refreshToken: string;
+    }>("/api/auth/signin", {
       method: "POST",
       body: JSON.stringify(values),
     });
@@ -36,6 +40,7 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     authStore.login();
     token.value = response.accessToken;
+    refresh_token.value = response.refreshToken;
 
     router.push("/platform");
   } catch (error) {

@@ -14,4 +14,7 @@ export default defineNuxtConfig({
       exclude: ['vee-validate']
     }
   },
+  experimental: {
+    typedPages: true
+  }
 });

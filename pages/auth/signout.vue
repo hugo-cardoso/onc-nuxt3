@@ -4,11 +4,7 @@ const token = useCookie("token");
 
 const authStore = useAuthStore();
 
-await useFetch("/api/auth/logout", {
-  headers: {
-    Authorization: `Bearer ${token.value}`,
-  },
-});
+await useApi("/api/auth/signout");
 
 authStore.logout();
 token.value = null;

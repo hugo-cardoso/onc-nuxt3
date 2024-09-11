@@ -29,11 +29,16 @@ export default defineEventHandler(async (event) => {
     }
 
     await workos.userManagement.sendVerificationEmail({ userId: user.id });
+    await workos.userManagement.createOrganizationMembership({
+      organizationId: process.env.WORKOS_ORG_ID!,
+      userId: user.id,
+    });
 
     return {
       confirmUrl: `/auth/signup/confirm?email=${email}`,
     } satisfies SignupResponse;
   } catch (error) {
     console.log(error);
+    return new Response("Unauthorized", { status: 401 });
   }
 });

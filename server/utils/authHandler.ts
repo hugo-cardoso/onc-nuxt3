@@ -1,11 +1,10 @@
 import type { EventHandler, EventHandlerRequest, H3Event } from "h3";
-import { jwtVerify, createRemoteJWKSet } from "jose";
 
-import { workos } from "./workos";
+import { getJwtData } from "./workos/jwt/get-jwt-data";
 import { getBearerToken } from "./getBearerToken";
-
-const jwksUrl = new URL(workos.userManagement.getJwksUrl(workos.clientId!));
-const JWKS = createRemoteJWKSet(jwksUrl);
+import { getExpirationTime } from "./workos/jwt/get-expiration-time";
+import { getSessionId } from "./workos/jwt/get-session-id";
+import { getUserId } from "./workos/jwt/get-user-id";
 
 type AuthEventHandler<T extends EventHandlerRequest> = (
   e: H3Event<T>,
@@ -25,13 +24,18 @@ export const defineAuthEventHandler = <T extends EventHandlerRequest, D>(
     if (!accessToken) throw new Error("No access token provided");
 
     try {
-      const {
-        payload: { sub, sid, exp },
-      } = await jwtVerify<{ sid: string }>(accessToken, JWKS);
+      const jwtData = await getJwtData(accessToken);
+      const jwtExpTime = getExpirationTime(jwtData);
+      const jwtSessionId = getSessionId(jwtData);
+      const jwtUserId = getUserId(jwtData);
 
-      if (exp! * 1000 < Date.now()) throw new Error("Token expired");
+      if (jwtExpTime! * 1000 < Date.now()) throw new Error("Token expired");
 
-      return handler(event, { accessToken, userId: sub!, sessionId: sid });
+      return handler(event, {
+        accessToken,
+        userId: jwtUserId!,
+        sessionId: jwtSessionId,
+      });
     } catch (e) {
       return new Response("Unauthorized", { status: 401 });
     }
